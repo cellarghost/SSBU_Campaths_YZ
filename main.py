@@ -56,6 +56,8 @@ def generate_splines():
         z_points = []
         pitch_points = []
         yaw_points = []
+        tilt_points = []
+        zoom_points = []
         ticks = [] if tick_mode else None
         
         base_tick = keyframes[0]['tick']
@@ -71,6 +73,11 @@ def generate_splines():
 
             pitch_points.append(rot[0])
             yaw_points.append(rot[1])
+            tilt_points.append(rot[2])
+
+            zoom = keyframe["fov"]
+
+            zoom_points.append(zoom)
 
             ticks.append(keyframe["tick"] - base_tick)
         
@@ -84,6 +91,8 @@ def generate_splines():
             interpolate_axis(z_points, ticks),
             interpolate_axis(pitch_points, ticks),
             interpolate_axis(yaw_points, ticks),
+            interpolate_axis(tilt_points, ticks),
+            interpolate_axis(zoom_points, ticks),
             path_end
         ]
 
@@ -94,20 +103,22 @@ def generate_splines():
 
 async def play_campath():
     try:
-        x_spline, y_spline, z_spline, pitch_spline, yaw_spline, path_end = generate_splines()
+        x_spline, y_spline, z_spline, pitch_spline, yaw_spline, tilt_spline, zoom_spline, path_end = generate_splines()
 
         progress = 0
         print(path_end)
         while progress < (path_end):
             # print("writing cam coordinates")
             ssbu_hook.write_xyz(float(x_spline(progress)), float(y_spline(progress)), float(z_spline(progress)))
-            ssbu_hook.write_py(float(pitch_spline(progress)), float(yaw_spline(progress)))
+            ssbu_hook.write_pyt(float(pitch_spline(progress)), float(yaw_spline(progress)), float(tilt_spline(progress)))
+            ssbu_hook.write_zoom(float(zoom_spline(progress)))
             progress += 0.001 if not tick_mode else 1
             time.sleep(0.008 if not tick_mode else 0.016)
             print(str(progress) + "-->" + str(path_end))
             # print(progress)
         ssbu_hook.write_xyz(0, 0, -100)
-        ssbu_hook.write_py(0, 0)
+        ssbu_hook.write_pyt(0, 0, 0)
+        ssbu_hook.write_zoom(70)
     
     except Exception as e:
         print('[play_campath] : ' + str(e))
@@ -116,7 +127,7 @@ async def play_campath_sync():
     global tick_sync
     tick_sync = True
     try: 
-        x_spline, y_spline, z_spline, pitch_spline, yaw_spline, path_end = generate_splines()
+        x_spline, y_spline, z_spline, pitch_spline, yaw_spline, tilt_spline, zoom_spline, path_end = generate_splines()
         global keyframes 
         global ssbu_hook
         base_tick = keyframes[0]['tick']
@@ -131,8 +142,9 @@ async def play_campath_sync():
                 else:
                     progress = current_tick - base_tick
                     ssbu_hook.write_xyz(float(x_spline(progress)), float(y_spline(progress)), float(z_spline(progress)))
-                    ssbu_hook.write_py(float(pitch_spline(progress)), float(yaw_spline(progress)))
-            time.sleep(0.01667)
+                    ssbu_hook.write_pyt(float(pitch_spline(progress)), float(yaw_spline(progress)), float(tilt_spline(progress)))
+                    ssbu_hook.write_zoom(float(zoom_spline(progress)))
+            time.sleep(0.01666)
             previous_tick = current_tick
     except Exception as e:
         print(e)
@@ -212,8 +224,9 @@ def main():
                         if keyframes[-1]['tick'] == current_tick:
                             warnings.append(datetime.now().strftime("%H:%M:%S") + ":: Keyframe not added: Cannot add two keyframes at the same tick.")
                 keyframe = {"pos": ssbu_hook.read_xyz(),
-                        "rot": ssbu_hook.read_py(),
+                        "rot": ssbu_hook.read_pyt(),
                         "tick": ssbu_hook.read_tick(),
+                        "fov": ssbu_hook.read_zoom(),
                         "name": "Keyframe " + str(len(keyframes))
                         }
                 print("Keyframe Added :: " + str(keyframe))

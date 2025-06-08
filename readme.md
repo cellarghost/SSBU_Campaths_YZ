@@ -2,6 +2,8 @@
 
 A mod for Nintendo Switch Emulators running Smash Bros Ultimate that allows for programmable camera paths. 
 
+## Installation
+
 ## Acknowledgements
 
 - [Pymem](https://github.com/srounet/Pymem) for writing/reading process memory

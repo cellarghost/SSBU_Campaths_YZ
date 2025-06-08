@@ -62,6 +62,8 @@ class mem_hook:
             self.z_addr = 0
             self.yaw_address = 0 # pos x + 20
             self.pitch_address = 0 # pos x + 24
+            self.tilt_address = 0
+            self.zoom_address = 0
             self.find_address_x()
 
             if tick_addr != None:
@@ -148,6 +150,8 @@ class mem_hook:
         self.z_addr = self.x_addr + 36
         self.pitch_address = self.x_addr + (20 if not self.rep_mode else 16) 
         self.yaw_address = self.x_addr + (24 if not self.rep_mode else 20)
+        self.tilt_address = (self.x_addr + 32) if self.rep_mode else None
+        self.zoom_address = (self.x_addr + 40) if self.rep_mode else None
         self.check_cam = False
         print("X address found at: " + str(self.x_addr))
         print("Camera position: " + str(self.read_xyz()))
@@ -158,9 +162,13 @@ class mem_hook:
         self.pm.write_float(self.y_addr, y)
         self.pm.write_float(self.z_addr, z)
     
-    def write_py(self, p, y):
+    def write_pyt(self, p, y, t):
         self.pm.write_float(self.pitch_address, p)
         self.pm.write_float(self.yaw_address, y)
+        self.pm.write_float(self.tilt_address, t)
+
+    def write_zoom(self, zoom):
+        self.pm.write_float(self.zoom_address, zoom)
 
     def read_xyz(self):
         return [
@@ -169,12 +177,16 @@ class mem_hook:
             self.pm.read_float(self.z_addr)
         ]
     
-    def read_py(self):
+    def read_pyt(self):
         return [
             self.pm.read_float(self.pitch_address),
-            self.pm.read_float(self.yaw_address)
+            self.pm.read_float(self.yaw_address),
+            self.pm.read_float(self.tilt_address)
         ]
     
+    def read_zoom(self):
+        return self.pm.read_float(self.zoom_address)
+
     def input_loop():
         while True:
             inp = input()
