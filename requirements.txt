@@ -1,0 +1,7 @@
+imgui
+imgui[glfw]
+pymem
+capstone
+frida
+numpy
+scipy
