@@ -132,7 +132,7 @@ async def play_campath_sync():
                     progress = current_tick - base_tick
                     ssbu_hook.write_xyz(float(x_spline(progress)), float(y_spline(progress)), float(z_spline(progress)))
                     ssbu_hook.write_py(float(pitch_spline(progress)), float(yaw_spline(progress)))
-            time.sleep(0.016)
+            time.sleep(0.01667)
             previous_tick = current_tick
     except Exception as e:
         print(e)
